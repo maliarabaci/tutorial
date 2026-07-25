@@ -1,36 +1,86 @@
-"This assignment is about a classification problem using a CNN architecture. Colab tutorial link and instructions are below:
+# CIFAR-10 Image Classification with PyTorch CNNs
 
-GitHub Tutorial Link
+This assignment explores image classification on the CIFAR-10 dataset using Convolutional Neural Network (CNN) architectures in PyTorch.
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/maliarabaci/tutorial/blob/main/cifar10_tutorial.ipynb)
 
+---
 
+> [!IMPORTANT]  
+> **Baseline Reset Rule**: For each experiment in **Steps 2 through 7**, you must return to the **Initial Baseline Configuration (Step 1)** before applying the specified modification. Do **NOT** stack changes cumulatively. Evaluating each step in isolation against the baseline allows you to determine whether each individual modification impacts performance **positively** or **negatively**. You will combine the successful modifications in **Step 8**.
 
-1) Click Runtime -> Run all. Alternatively, you can run cell by cell with clicking “Play” buttons at the left of each cell. Examine the network structure, learning rate, optimizer, loss function. Plot the learning curve for training data and find validation accuracy for the last epoch.
+---
 
- 
+## Assignment Instructions
 
-2) Change the optimizer to Stochastic Gradient Descent (SGD). Plot the learning curve for training data and find validation accuracy and loss values for the last epoch. Compare results. Hint: You might need to tune learning rate so that the learning curve can converge. Using momentum may produce better results.
+### 1) Initial Baseline Configuration
+Run the notebook as initially configured (`cifar10_tutorial.ipynb`).
+- **Architecture**: 2 Conv layers (`Conv1`: 3 $\to$ 16, `Conv2`: 16 $\to$ 32, kernel size 4, padding 1), `MaxPool2d(2)`, 2 Fully Connected layers (`FC1`: $32 \times 7 \times 7 = 1568 \to 128$, `FC2`: $128 \to 10$).
+- **Hyperparameters**: Adam optimizer ($\text{lr} = 0.01$), `ReLU` activations, `CrossEntropyLoss`, batch size 256, 50 epochs.
+- **Task**: Plot the learning curve (Epoch vs. Training Loss) and record the final validation loss and accuracy. This serves as your **baseline benchmark**.
 
- 
+---
 
-3) Change all the activation function in the network from ReLU to Sigmoid. Plot the learning curve for training data and find validation accuracy and loss values for the last epoch. Compare results.
+### 2) Optimizer Comparison (Adam vs. SGD)
+*(Reset to Initial Baseline Configuration before starting)*
+- **Modification**: Change the optimizer from Adam to Stochastic Gradient Descent (`torch.optim.SGD`).
+  - **Part A**: Run with plain SGD ($\text{lr} = 0.01$, momentum = 0).
+  - **Part B**: Tune SGD by adding momentum (`torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9)`).
+- **Task**: Plot the learning curves and record the final validation accuracy and loss for both Part A and Part B.
+- **Analysis**: Compare the performance against the Adam baseline. Note the negative impact of un-tuned plain SGD versus the positive recovery achieved by adding momentum (`momentum=0.9`).
 
- 
+---
 
-4) Change the kernel size of the convolutional layers to 6. Plot the learning curve for training data and find validation accuracy and loss values for the last epoch. Comment on the results. (You are required to change the input size of first fully connected layer in ‘init’ function and flattened intermediate output in ‘forward’ function accordingly.)
+### 3) Activation Function Impact (ReLU vs. Sigmoid)
+*(Reset to Initial Baseline Configuration before starting)*
+- **Modification**: Change all activation functions in the network from `ReLU` to `Sigmoid` (`activation_func = nn.Sigmoid()`).
+- **Task**: Plot the learning curve for training data, and compute validation accuracy and loss values for the last epoch.
+- **Analysis**: Compare the results with the baseline. Discuss the negative impact on convergence speed and accuracy caused by vanishing gradients when using Sigmoid activations in CNNs.
 
- 
+---
 
-5) Remove Max-Pooling layers. Plot the learning curve for the training data and find validation accuracy and loss values for the last epoch. Discuss on the results. (You are required to change the input size of first fully connected layer in ‘init’ function and flattened intermediate output in ‘forward’ function accordingly.)
+### 4) Convolutional Kernel Size (Kernel Size 4 vs. 6)
+*(Reset to Initial Baseline Configuration before starting)*
+- **Modification**: Increase the kernel size of both convolutional layers from 4 to 6 (`kernel_size_val = 6`).
+  - *Note*: You must adjust the spatial dimensions and FC input size accordingly. For $32 \times 32$ input with kernel size 6 and padding 1:
+    - After `Conv1` ($K=6, P=1$) and `MaxPool2d(2)`: output spatial size is $14 \times 14$.
+    - After `Conv2` ($K=6, P=1$) and `MaxPool2d(2)`: output spatial size is $5 \times 5$.
+    - Update `FC1` input dimension in `__init__` and `forward` to $32 \times 5 \times 5 = 800$.
+- **Task**: Plot the learning curve, record the final validation accuracy and loss, and note the change in total trainable parameters.
+- **Analysis**: Discuss the impact of using larger receptive fields on feature resolution and performance.
 
- 
+---
 
-6) Add an additional convolutional layer to the model. Specify the output size and the kernel size. Plot the learning curve for training data and find validation accuracy and loss values for the last epoch. Compare results. (You should change the input size of first fully connected layer in ‘init’ function and flattened intermediate output in ‘forward’ function accordingly.)
+### 5) Role of Pooling Layers (Removing Max-Pooling)
+*(Reset to Initial Baseline Configuration before starting)*
+- **Modification**: Remove both `MaxPool2d` layers from the network.
+  - *Note*: Without pooling, spatial dimensions remain larger ($32 \times 32 \to 31 \times 31 \to 30 \times 30$). Update `FC1` input dimension in `__init__` and `forward` to $32 \times 30 \times 30 = 28,800$.
+- **Task**: Plot the training learning curve and measure final validation accuracy and loss.
+- **Analysis**: Evaluate the negative impacts of removing pooling (e.g., sudden parameter explosion from ~200k to ~3.6M parameters, severe computational overhead, and overfitting).
 
- 
+---
 
-7) Increase the output size of first convolutional layer to 32 and second one to 64. Accordingly, increase the output size of first FCL to 1024 and second to 256. Plot the learning curve for training data and find validation accuracy and loss values for the last epoch. Comment on the results. (You are still required to change the input size of first fully connected layer in ‘init’ function and flattened intermediate output in ‘forward’ function accordingly.)
+### 6) Network Depth (Adding a 3rd Convolutional Layer)
+*(Reset to Initial Baseline Configuration before starting)*
+- **Modification**: Add a 3rd Convolutional Layer to the model (`Conv3`: 32 $\to$ 64 channels, kernel size 3, padding 1) followed by `MaxPool2d(2)`.
+  - *Note*: Update `FC1` input dimension in `__init__` and `forward` to $64 \times 3 \times 3 = 576$.
+- **Task**: Plot the learning curve and record the final validation loss and accuracy.
+- **Analysis**: Compare the performance with the baseline. Discuss the positive effect of increasing network depth and feature abstraction capacity.
 
- 
+---
 
-8) Combine the promising methods from each of the previous parts with your own selection of number of layers, kernel sizes, output channel sizes, learning rate, optimizer, etc. to get the best result. Propose your final architecture and present your performance to get the highest grade!"
+### 7) Model Capacity & Width (Increasing Channel Sizes)
+*(Reset to Initial Baseline Configuration before starting)*
+- **Modification**: Expand the channel capacities and fully connected layer sizes:
+  - Increase `Conv1` output channels to 32 and `Conv2` to 64.
+  - Increase `FC1` output size to 1024 and `FC2` to 256.
+  - *Note*: Update `FC1` input dimension to $64 \times 7 \times 7 = 3136$.
+- **Task**: Plot the learning curve and record the final validation accuracy and loss.
+- **Analysis**: Compare performance with the baseline. Evaluate the positive impact of increasing channel width and representation capacity on validation accuracy.
+
+---
+
+### 8) Final Architecture Synthesis & Optimization
+*(Combine promising methods from previous steps)*
+- **Task**: Combine the beneficial modifications identified in Steps 2–7 (e.g., optimal depth/width, activation functions, pooling, optimizer, learning rate schedule, data augmentation, etc.) to construct your final optimized CNN architecture.
+- **Report**: Present your final architecture diagram/summary, learning curves, and final test set accuracy. Aim to achieve the highest possible classification performance!
